@@ -1,26 +1,18 @@
 const express = require('express');
 const multer = require('multer');
-const path = require('path');
 const cors = require('cors');
+const path = require('path');
+const fs = require('fs');
 
 const app = express();
 const PORT = 3000;
 
+// In-memory store of linked devices (use DB in real apps)
+const linkedDevices = {};
+
 app.use(cors());
 app.use(express.json());
 app.use(express.static('public'));
-
-// Store device-code to number mapping (use DB in production)
-const linkedDevices = {};
-
-function generateCode() {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
-  let code = '';
-  for (let i = 0; i < 6; i++) {
-    code += chars.charAt(Math.floor(Math.random() * chars.length));
-  }
-  return code;
-}
 
 // File storage setup
 const storage = multer.diskStorage({
@@ -31,7 +23,17 @@ const storage = multer.diskStorage({
 });
 const upload = multer({ storage });
 
-// Route to link device with number
+// Generate random 6-letter code
+function generateCode() {
+  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  let code = '';
+  for (let i = 0; i < 6; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return code;
+}
+
+// Link a device with a phone number
 app.post('/link-device', (req, res) => {
   const { phone } = req.body;
   if (!phone) return res.status(400).json({ error: 'Phone number required' });
@@ -41,7 +43,7 @@ app.post('/link-device', (req, res) => {
   res.json({ code });
 });
 
-// Route to upload DP (with verification)
+// Upload a profile picture only if code matches phone
 app.post('/upload', upload.single('image'), (req, res) => {
   const { code, phone } = req.body;
 
@@ -54,5 +56,5 @@ app.post('/upload', upload.single('image'), (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
+  console.log(`✅ Server running on http://localhost:${PORT}`);
 });
