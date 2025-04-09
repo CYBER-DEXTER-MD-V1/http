@@ -31,11 +31,13 @@
   </div>
 
   <script>
+    const backendUrl = "https://your-backend.onrender.com"; // Replace with your Render URL
+
     async function linkDevice() {
       const phone = document.getElementById('phone').value.trim();
       if (!phone) return alert("Please enter a phone number!");
 
-      const res = await fetch('/link-device', {
+      const res = await fetch(`${backendUrl}/link-device`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phone })
@@ -54,7 +56,7 @@
       formData.append('phone', document.getElementById('uploadPhone').value.trim());
       formData.append('code', document.getElementById('uploadCode').value.trim());
 
-      const res = await fetch('/upload', {
+      const res = await fetch(`${backendUrl}/upload`, {
         method: 'POST',
         body: formData
       });
