@@ -4,8 +4,8 @@
   "description": "Backend for WhatsApp DP Uploader app (Node.js + Express)",
   "main": "server.js",
   "scripts": {
-  "start": "node backend/server.js",
-  "dev": "nodemon backend/server.js"
+  "start": "node whatsapp-dp-uploader-backend/server.js",
+  "dev": "nodemon whatsapp-dp-uploader-backend/server.js"
 },
   "dependencies": {
     "express": "^4.17.1",
