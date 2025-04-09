@@ -1,108 +1,98 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
+  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>YouTube Channel Viewer</title>
+  <title>YouTube Video Looper</title>
   <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-gray-100 text-gray-800">
-
-  <header class="bg-red-600 text-white p-4 text-center text-2xl font-bold shadow">
-    🔴 YouTube Channel Viewer
+  <header class="bg-red-600 text-white text-2xl text-center p-4 font-bold">
+    🎥 YouTube Video 100x Loop Player
   </header>
 
-  <section class="max-w-xl mx-auto mt-6 p-4 bg-white rounded-xl shadow">
-    <label class="block mb-2 text-sm font-medium">Paste Your YouTube Channel URL:</label>
-    <input id="channelUrl" type="text" placeholder="https://www.youtube.com/@YourChannelName" class="w-full p-2 border rounded mb-4" />
-    <button onclick="handleFetch()" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">Fetch Videos</button>
-    <p id="error" class="text-sm text-red-600 mt-2 hidden">Error: Invalid channel URL or failed to fetch.</p>
-  </section>
+  <main class="max-w-xl mx-auto mt-8 bg-white p-6 rounded-xl shadow">
+    <label class="block mb-2 font-semibold">Paste a YouTube Video Link:</label>
+    <input type="text" id="videoUrl" placeholder="https://www.youtube.com/watch?v=VIDEO_ID"
+           class="w-full p-2 border rounded mb-4" />
 
-  <main id="video-container" class="p-6 max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-    <!-- Videos will appear here -->
+    <button onclick="startLoop()" class="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700">
+      ▶️ Start Looping
+    </button>
+
+    <div id="status" class="mt-4 text-center text-lg font-bold hidden">
+      Playing... <span id="counter">0</span> / 100
+    </div>
+
+    <div class="mt-6 aspect-video hidden" id="videoWrapper">
+      <iframe id="ytPlayer" class="w-full h-full rounded" frameborder="0"
+              allow="autoplay; encrypted-media" allowfullscreen></iframe>
+    </div>
   </main>
 
-  <footer class="text-center text-sm text-gray-500 py-6">
-    © 2025 CYBER DEXTER | Made with ❤️ + YouTube API
-  </footer>
-
   <script>
-    const API_KEY = "AIzaSyCMaxHj34zs_wdIEJPXX6hwR0Q2_RDCxCw"; // Replace with your real key
-    const MAX_RESULTS = 6;
-    const errorEl = document.getElementById("error");
-    const container = document.getElementById("video-container");
+    let playCount = 0;
+    const maxPlays = 100;
+    let player;
 
-    async function getChannelIdFromUrl(url) {
-      try {
-        if (url.includes("/channel/")) {
-          // Direct channel ID link
-          return url.split("/channel/")[1].split(/[/?#]/)[0];
-        } else if (url.includes("/@")) {
-          // Handle @username channels (need to resolve it to ID)
-          const username = url.split("/@")[1].split(/[/?#]/)[0];
-          const res = await fetch(`https://www.googleapis.com/youtube/v3/search?key=${API_KEY}&q=${username}&type=channel&part=snippet`);
-          const data = await res.json();
-          return data.items[0]?.snippet?.channelId || null;
-        } else {
-          return null;
-        }
-      } catch (err) {
-        console.error("Channel ID fetch error", err);
-        return null;
-      }
+    function extractVideoId(url) {
+      const regex = /(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/|v\/|.*[?&]v=))([^"&?\/\s]{11})/;
+      const match = url.match(regex);
+      return match ? match[1] : null;
     }
 
-    async function fetchVideos(channelId) {
-      container.innerHTML = "";
-      errorEl.classList.add("hidden");
-
-      const apiURL = `https://www.googleapis.com/youtube/v3/search?key=${API_KEY}&channelId=${channelId}&part=snippet,id&order=date&maxResults=${MAX_RESULTS}`;
-      
-      try {
-        const res = await fetch(apiURL);
-        const data = await res.json();
-
-        if (!data.items || data.items.length === 0) throw new Error("No videos");
-
-        data.items.forEach(item => {
-          if (item.id.kind === "youtube#video") {
-            const videoId = item.id.videoId;
-            const title = item.snippet.title;
-            const desc = item.snippet.description;
-            const thumb = item.snippet.thumbnails.high.url;
-
-            const card = `
-              <div class="bg-white shadow-md rounded-xl overflow-hidden">
-                <a href="https://www.youtube.com/watch?v=${videoId}" target="_blank">
-                  <img src="${thumb}" alt="${title}" class="w-full h-48 object-cover" />
-                </a>
-                <div class="p-4">
-                  <h2 class="text-lg font-semibold">${title}</h2>
-                  <p class="text-sm text-gray-600 mt-1">${desc.slice(0, 80)}...</p>
-                </div>
-              </div>
-            `;
-            container.innerHTML += card;
-          }
-        });
-
-      } catch (err) {
-        errorEl.classList.remove("hidden");
-        console.error("Video fetch failed", err);
+    function startLoop() {
+      const inputUrl = document.getElementById("videoUrl").value.trim();
+      const videoId = extractVideoId(inputUrl);
+      if (!videoId) {
+        alert("Invalid YouTube URL!");
+        return;
       }
+
+      document.getElementById("status").classList.remove("hidden");
+      document.getElementById("videoWrapper").classList.remove("hidden");
+
+      loadPlayer(videoId);
     }
 
-    async function handleFetch() {
-      const url = document.getElementById("channelUrl").value.trim();
-      const channelId = await getChannelIdFromUrl(url);
-      if (channelId) {
-        fetchVideos(channelId);
+    function loadPlayer(videoId) {
+      const iframe = document.getElementById("ytPlayer");
+      iframe.src = `https://www.youtube.com/embed/${videoId}?autoplay=1&enablejsapi=1&rel=0&playsinline=1&mute=0&loop=0`;
+
+      // Inject YouTube Player API
+      if (!window.YT) {
+        const tag = document.createElement("script");
+        tag.src = "https://www.youtube.com/iframe_api";
+        document.body.appendChild(tag);
+        window.onYouTubeIframeAPIReady = () => createYTPlayer(videoId);
       } else {
-        errorEl.classList.remove("hidden");
+        createYTPlayer(videoId);
+      }
+    }
+
+    function createYTPlayer(videoId) {
+      player = new YT.Player("ytPlayer", {
+        videoId: videoId,
+        events: {
+          'onStateChange': onPlayerStateChange
+        }
+      });
+    }
+
+    function onPlayerStateChange(event) {
+      // When video ends
+      if (event.data === YT.PlayerState.ENDED) {
+        playCount++;
+        document.getElementById("counter").innerText = playCount;
+
+        if (playCount < maxPlays) {
+          player.seekTo(0);
+          player.playVideo();
+        } else {
+          alert("✅ Finished playing 100 times!");
+        }
       }
     }
   </script>
-
 </body>
 </html>
