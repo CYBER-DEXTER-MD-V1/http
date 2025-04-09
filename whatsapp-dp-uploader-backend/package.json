@@ -1,23 +1,21 @@
 {
   "name": "whatsapp-dp-uploader-backend",
   "version": "1.0.0",
-  "description": "Backend for WhatsApp DP Uploader app (Node.js + Express)",
+  "description": "WhatsApp DP uploader backend",
   "main": "server.js",
   "scripts": {
-  "start": "node whatsapp-dp-uploader-backend/server.js",
-  "dev": "nodemon whatsapp-dp-uploader-backend/server.js"
-},
+    "start": "node whatsapp-dp-uploader-backend/server.js",
+    "dev": "nodemon whatsapp-dp-uploader-backend/ server.js"
+  },
   "dependencies": {
-    "express": "^4.17.1",
-    "multer": "^1.4.2",
-    "cors": "^2.8.5"
+    "express": "^4.17.1",      // Ensure express is listed here
+    "multer": "^1.4.2",        // Your other dependencies
+    "cors": "^2.8.5"           // Any other dependencies
   },
   "devDependencies": {
-    "nodemon": "^2.0.15"
+    "nodemon": "^2.0.7"
   },
   "engines": {
-    "node": ">=14.x"
-  },
-  "author": "CYBER DEXTER",
-  "license": "MIT"
+    "node": "14.x"
+  }
 }
