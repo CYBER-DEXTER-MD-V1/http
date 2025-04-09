@@ -1,0 +1,60 @@
+<!-- Same Head and Tailwind setup as before -->
+<body class="bg-gray-100 flex flex-col items-center justify-center min-h-screen p-4">
+  <div class="bg-white p-6 rounded-2xl shadow-md max-w-md w-full">
+    <h2 class="text-xl font-bold mb-4 text-center">Link Your Device</h2>
+    
+    <input type="text" id="phone" placeholder="Enter your phone number" class="w-full mb-2 px-3 py-2 border rounded"/>
+    <button onclick="linkDevice()" class="bg-blue-600 text-white w-full py-2 rounded-xl">Generate Code</button>
+    <p class="mt-2 text-center font-mono" id="codeResult"></p>
+
+    <hr class="my-6"/>
+
+    <h2 class="text-xl font-bold mb-4 text-center">Change Your DP</h2>
+    <form id="uploadForm">
+      <input type="text" name="uploadPhone" id="uploadPhone" placeholder="Phone number" class="w-full mb-2 px-3 py-2 border rounded" required />
+      <input type="text" name="uploadCode" id="uploadCode" placeholder="Device Code" class="w-full mb-2 px-3 py-2 border rounded" required />
+      <input type="file" name="image" id="image" class="w-full mb-2" required />
+      <button type="submit" class="bg-green-600 text-white w-full py-2 rounded-xl">Upload DP</button>
+    </form>
+
+    <div id="preview" class="mt-4 hidden">
+      <h4 class="text-center font-semibold mb-2">Preview</h4>
+      <img id="uploadedImage" class="w-full rounded-xl"/>
+    </div>
+  </div>
+
+  <script>
+    async function linkDevice() {
+      const phone = document.getElementById('phone').value;
+      const res = await fetch('/link-device', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone })
+      });
+      const data = await res.json();
+      document.getElementById('codeResult').textContent = `Your Code: ${data.code}`;
+    }
+
+    document.getElementById('uploadForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const formData = new FormData();
+      formData.append('image', document.getElementById('image').files[0]);
+      formData.append('phone', document.getElementById('uploadPhone').value);
+      formData.append('code', document.getElementById('uploadCode').value);
+
+      const res = await fetch('/upload', {
+        method: 'POST',
+        body: formData
+      });
+
+      const data = await res.json();
+      if (data.success) {
+        document.getElementById('uploadedImage').src = data.filePath;
+        document.getElementById('preview').classList.remove('hidden');
+      } else {
+        alert(data.error || 'Something went wrong!');
+      }
+    });
+  </script>
+</body>
